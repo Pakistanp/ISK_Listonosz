@@ -7,5 +7,10 @@ public class Graph {
 
     public Graph(String filePath) {
         Path graphFilePath = Paths.get(filePath);
+
+    }
+
+    private void LoadEdges() {
+
     }
 }
