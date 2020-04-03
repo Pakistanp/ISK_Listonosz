@@ -1,10 +1,13 @@
 package ISK_Listonosz;
 
+import io.jenetics.BitChromosome;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class Graph implements AnyGraph{
     private final int CORRECT_AMOUNT_OF_EDGE_DATA_IN_ONE_LINE = 3;
@@ -57,7 +60,12 @@ public class Graph implements AnyGraph{
     }
 
     public List<AnyEdge> edges() {
-        return new ArrayList<>(edges);
+        return edges;
+    }
+
+    @Override
+    public List<AnyVertex> vertices() {
+        return vertices;
     }
 
     @Override
