@@ -15,6 +15,8 @@ public class Graph implements AnyGraph{
     private List<AnyEdge> edges;
     private List<AnyVertex> vertices;
     private int countOfVertex;
+    private int sumOfAll;
+    private int maxCost;
 
     public Graph(String filePath) {
         Path graphFilePath = Paths.get(filePath);
@@ -23,6 +25,7 @@ public class Graph implements AnyGraph{
             vertices = new ArrayList<>();
             Files.lines(graphFilePath).forEach(this::LoadEdgesAndCosts);
             LoadVertexes();
+            MaxCost();
         } catch (IOException e) {
             throw new IllegalStateException("An error when initialising the graph");
         }
@@ -50,6 +53,7 @@ public class Graph implements AnyGraph{
             int firstVertex = Integer.parseInt(splitLine[0]);
             int secondVertex = Integer.parseInt(splitLine[1]);
             int cost = Integer.parseInt(splitLine[2]);
+            sumOfAll += cost;
             edges.add(new Edge(firstVertex, secondVertex, cost));
 
             if (firstVertex > countOfVertex)
@@ -59,13 +63,64 @@ public class Graph implements AnyGraph{
         }
     }
 
+    public void MaxCost() {
+        int maxCost = 0;
+//        int tempMaxCost = 0;
+//        int worstWay = 0;
+//        List<Integer> metVertexList = new ArrayList<>();
+//        List<AnyVertex> copyVertexList = new ArrayList<>();
+//        for (int i = 0; i < vertices.size(); i++) {
+//            copyVertexList.add(new Vertex(vertices.get(i).current(),vertices.get(i).connectedVertexCosts()));
+//        }
+//        AnyVertex vertex = copyVertexList.get(0);
+//        //removeWorstWayFromAllVertices(copyVertexList, 1);
+//        metVertexList.add(1);
+//        for (int i = 0; i < copyVertexList.size(); i++) {
+//            for (Map.Entry<Integer, Integer> vertexCost : vertex.connectedVertexCosts().entrySet()) {
+//                if (metVertexList.contains(vertexCost.getKey()))
+//                    continue;
+//                if (tempMaxCost == 0) {
+//                    tempMaxCost = vertexCost.getValue();
+//                    worstWay = vertexCost.getKey();
+//                } else if (tempMaxCost < vertexCost.getValue()) {
+//                    tempMaxCost = vertexCost.getValue();
+//                    worstWay = vertexCost.getKey();
+//                }
+//            }
+//            maxCost += tempMaxCost;
+//            vertex = copyVertexList.get(worstWay);
+//            metVertexList.add(worstWay);
+//            tempMaxCost = 0;
+//            //removeWorstWayFromAllVertices(copyVertexList, worstWay);
+//        }
+        for (AnyEdge edge : edges) {
+            maxCost += edge.cost();
+        }
+        this.maxCost = maxCost;
+    }
+
+    private void removeWorstWayFromAllVertices(List<AnyVertex> vertexList, int toRemove) {
+        for (AnyVertex vertex : vertexList) {
+            vertex.connectedVertexCosts().remove(toRemove);
+        }
+    }
+
     public List<AnyEdge> edges() {
         return edges;
+    }
+
+    public int MaxCosts() {
+        return this.maxCost;
     }
 
     @Override
     public List<AnyVertex> vertices() {
         return vertices;
+    }
+
+    @Override
+    public int sumOfAll() {
+        return sumOfAll;
     }
 
     @Override

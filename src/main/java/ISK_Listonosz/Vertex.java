@@ -1,8 +1,6 @@
 package ISK_Listonosz;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Vertex implements AnyVertex {
     private final int currentVertex;
@@ -13,12 +11,20 @@ public class Vertex implements AnyVertex {
         this.connectedVertexCosts = connectedVertexCosts;
     }
 
+    public Vertex(AnyVertex vertex) {
+        this.currentVertex = vertex.current();
+        this.connectedVertexCosts = new HashMap<>();
+        this.connectedVertexCosts.putAll(vertex.connectedVertexCosts());
+    }
+
     @Override
-    public String toString() {
-        return "Vertex{" +
-                "currentVertex=" + currentVertex +
-                ", connectedVertexCosts=" + connectedVertexCosts +
-                '}';
+    public int getNumberChosenVertexByCost(int chosenCost) {
+        int number = 0;
+        for (Map.Entry<Integer, Integer> vertexEntry : connectedVertexCosts.entrySet()) {
+            if(vertexEntry.getValue() == chosenCost)
+                number = vertexEntry.getKey();
+        }
+        return number;
     }
 
     @Override

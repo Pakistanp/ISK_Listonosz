@@ -21,7 +21,10 @@ public class Testy implements Function<Genotype<BitGene>, Integer> {
         //List<MetVertex> chromosomeVertex = chromosomeGraph.GetListOfMetVertex();
         int amountOfUsedCost = chromosomeGraph.amountOfUsedCost();
         boolean everyVertexHasBeenMet = chromosomeGraph.everyVertexHasBeenMet();
-
-        return amountOfUsedCost;
+        if (everyVertexHasBeenMet)
+            return amountOfUsedCost;
+            //return graph.MaxCosts() - amountOfUsedCost;
+        else
+            return graph.sumOfAll();
     }
 }

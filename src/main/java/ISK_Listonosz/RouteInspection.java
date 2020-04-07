@@ -13,25 +13,29 @@ public class RouteInspection {
     private final static String PATH = "src/main/resources/graphs/";
     public static void main(String [] args) throws IOException {
         System.out.println("TEST");
-        Graph graphOne = new Graph(PATH + "graphTEST");
+        //Graph graphTest = new Graph(PATH + "graphTEST");
+        Graph graphTest = new Graph(PATH + "graph1");
 
-        Testy testy = new Testy(graphOne);
+        Testy testy = new Testy(graphTest);
         Engine<BitGene, Integer> engine =
-                Engine.builder(testy, BitChromosome.of(graphOne.amountOfVertex() * AMOUNT_OF_BITES_IN_BYTE,0.5))
-                .populationSize(100)
-                .survivorsSelector(new TournamentSelector<>(5))
-                .offspringSelector(new RouletteWheelSelector<>())
-                .alterers(new Mutator<>(0.115), new SinglePointCrossover<>(0.16))
-                .build();
+                Engine.builder(testy, BitChromosome.of((graphTest.amountOfVertex() - 1) * AMOUNT_OF_BITES_IN_BYTE,0.5))
+                        .populationSize(1000)
+                        .optimize(Optimize.MINIMUM)
+                        .survivorsSelector(new TournamentSelector<>(5))
+                        .offspringSelector(new RouletteWheelSelector<>())
+                        .alterers(new Mutator<>(0.115), new SinglePointCrossover<>(0.16))
+                        .build();
 
         EvolutionStatistics<Integer, ?> statistics = EvolutionStatistics.ofNumber();
-//        Phenotype<BitGene, Integer> finalPhenotype = engine.stream()
-//                .limit(100)
-//                .peek(statistics)
-//                .collect(toBestPhenotype());
+        Phenotype<BitGene, Integer> finalPhenotype = engine.stream()
+                .limit(100)
+                .peek(statistics)
+                .collect(toBestPhenotype());
 
         System.out.println(statistics);
-//        System.out.println(finalPhenotype);
+        //System.out.println(finalPhenotype);
 
+        Result result = new Result(finalPhenotype, graphTest);
+        System.out.println(result);
     }
 }

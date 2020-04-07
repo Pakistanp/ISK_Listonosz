@@ -2,15 +2,13 @@ package ISK_Listonosz;
 
 import io.jenetics.BitChromosome;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class MetGraph {
     private final List<MetVertex> metVertices;
     private final Graph graph;
+    private List<Integer> graphData;
 
     public MetGraph(List<MetVertex> metVertices, Graph graph){
         this.metVertices = metVertices;
@@ -19,22 +17,22 @@ public class MetGraph {
 
     public MetGraph(Graph graph, BitChromosome chromosome) {
         this.graph = graph;
-        List<Integer> graphData = getListOfGraphIntDataFrom(chromosome);
-        chooseWays(graphData, graph.vertices());
         metVertices = new ArrayList<>();
-        int cost = 0;
-        for (int i = 0; i < graphData.size(); i++) {
-            MetVertex newMetVertex;
-            if (i == 0) {
+        graphData = getListOfGraphIntDataFrom(chromosome);
+        IntStream.range(0, graphData.size()).forEach(element -> graphData.set(element, graphData.get(element) + 128));
+        try {
+            chooseWays(graphData, graph.vertices());
+            int cost = 0;
+            for (int i = 0; i < graphData.size(); i++) {
+                MetVertex newMetVertex;
                 AnyVertex vertex = graph.vertices().get(i);
                 cost = vertex.connectedVertexCosts().get(graphData.get(i));
-                newMetVertex = new MetVertex(vertex,0);
+                newMetVertex = new MetVertex(vertex, cost);
+
+                metVertices.add(newMetVertex);
             }
-            else {
-                newMetVertex = new MetVertex(graph.vertices().get(i),cost);
-                cost = graph.vertices().get(i).connectedVertexCosts().get(graphData.get(i));
-            }
-            metVertices.add(newMetVertex);
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
@@ -42,7 +40,7 @@ public class MetGraph {
         byte[] graphDataInBytes = chromosome.toByteArray();
         Integer[] graphDataInInts = new Integer[graphDataInBytes.length];
         for (int i = 0; i < graphDataInInts.length; i++) {
-            graphDataInInts[i] = Math.abs(graphDataInBytes[i]);
+            graphDataInInts[i] = (int)graphDataInBytes[i];
         }
         return new ArrayList<>(Arrays.asList(graphDataInInts));
     }
@@ -59,12 +57,31 @@ public class MetGraph {
     }
 
     public boolean everyVertexHasBeenMet() {
-        return graph.amountOfVertex() == metVertices.size();
+        List<Integer> tempVertexList = new ArrayList<>();
+        tempVertexList.add(1);
+        boolean res = true;
+        for (int i = 0; i < graphData.size(); i++) {
+            if (!tempVertexList.contains(graphData.get(i)))
+                tempVertexList.add(graphData.get(i));
+            else {
+                res = false;
+                break;
+            }
+        }
+        return res;
+    }
+
+    public boolean isCorrectWay() {
+        int timesMet = 0;
+        for (AnyVertex vertex : graph.vertices()) {
+            //vertex.
+        }
+        return true;
     }
 
     private void chooseWays(List<Integer> graphData, List<AnyVertex> vertices) {
         for (int k = 0; k < graphData.size(); k++) {
-            int section = (int) Math.ceil(127 / vertices.get(k).connectedVertexCosts().size());
+            int section = (int) Math.ceil(256 / vertices.get(k).connectedVertexCosts().size());
             int i = 1;
             for (Map.Entry<Integer, Integer> vertexEntry : vertices.get(k).connectedVertexCosts().entrySet()) {
                 if ((section * i + 1) >= graphData.get(k)) {
@@ -74,5 +91,17 @@ public class MetGraph {
                 i++;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder graphAsString = new StringBuilder();
+        metVertices.forEach(vertex -> {
+            graphAsString.append(vertex.current()).append("-").append(graphData.get(vertex.current() - 1)).append("->").append(vertex.GetChosenCost()).append("\n");
+        });
+        return graphAsString.toString();
+    }
+    public List<Integer> GetGraphData() {
+        return graphData;
     }
 }

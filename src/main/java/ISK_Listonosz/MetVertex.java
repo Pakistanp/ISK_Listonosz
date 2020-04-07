@@ -39,4 +39,10 @@ public class MetVertex implements AnyVertex {
     public Map<Integer, Integer> connectedVertexCosts() {
         return vertex.connectedVertexCosts();
     }
+
+    @Override
+    public int getNumberChosenVertexByCost(int chosenCost) {
+        return 0;
+    }
+
 }

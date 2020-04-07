@@ -6,5 +6,6 @@ public interface AnyGraph {
     List<AnyEdge> edges();
     List<AnyVertex> vertices();
 
+    int sumOfAll();
     int amountOfVertex();
 }
