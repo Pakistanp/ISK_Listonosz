@@ -17,7 +17,6 @@ public class Result {
     public String toString() {
         return finalPhenotype.toString() + "\n" +
                 "Best way:\n" + resultGraph +
-                "Amount of used cost is:\n" + resultGraph.amountOfUsedCost() +
-                "'\nDUPA \n" + resultGraph.GetGraphData();
+                "\nAmount of used cost is:\n" + resultGraph.amountOfUsedCost();
     }
 }

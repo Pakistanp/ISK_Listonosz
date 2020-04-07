@@ -42,7 +42,12 @@ public class MetVertex implements AnyVertex {
 
     @Override
     public int getNumberChosenVertexByCost(int chosenCost) {
-        return 0;
+        int number = 0;
+        for (Map.Entry<Integer, Integer> vertexEntry : vertex.connectedVertexCosts().entrySet()) {
+            if(vertexEntry.getValue() == chosenCost)
+                number = vertexEntry.getKey();
+        }
+        return number;
     }
 
 }
