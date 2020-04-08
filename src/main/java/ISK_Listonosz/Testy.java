@@ -21,7 +21,8 @@ public class Testy implements Function<Genotype<BitGene>, Integer> {
         //List<MetVertex> chromosomeVertex = chromosomeGraph.GetListOfMetVertex();
         int amountOfUsedCost = chromosomeGraph.amountOfUsedCost();
         boolean everyVertexHasBeenMet = chromosomeGraph.everyVertexHasBeenMet();
-        if (everyVertexHasBeenMet)
+        boolean foundBackWay = chromosomeGraph.foundBackWay();
+        if (everyVertexHasBeenMet && foundBackWay)
             return amountOfUsedCost;
             //return graph.MaxCosts() - amountOfUsedCost;
         else

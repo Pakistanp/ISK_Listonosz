@@ -46,6 +46,7 @@ public class MetVertex implements AnyVertex {
         for (Map.Entry<Integer, Integer> vertexEntry : vertex.connectedVertexCosts().entrySet()) {
             if(vertexEntry.getValue() == chosenCost)
                 number = vertexEntry.getKey();
+                //break;
         }
         return number;
     }

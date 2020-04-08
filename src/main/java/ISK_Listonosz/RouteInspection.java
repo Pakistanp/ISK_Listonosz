@@ -18,7 +18,7 @@ public class RouteInspection {
 
         Testy testy = new Testy(graphTest);
         Engine<BitGene, Integer> engine =
-                Engine.builder(testy, BitChromosome.of((graphTest.amountOfVertex() - 1) * AMOUNT_OF_BITES_IN_BYTE,0.5))
+                Engine.builder(testy, BitChromosome.of(((graphTest.amountOfVertex() - 1) * AMOUNT_OF_BITES_IN_BYTE) * 2 ,0.5))
                         .populationSize(100)
                         .optimize(Optimize.MINIMUM)
                         .survivorsSelector(new TournamentSelector<>(5))
