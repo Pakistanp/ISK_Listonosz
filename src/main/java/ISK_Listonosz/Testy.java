@@ -9,10 +9,12 @@ import java.util.function.Function;
 
 public class Testy implements Function<Genotype<BitGene>, Integer> {
     private final Graph graph;
+    private int check_again = 1;
 
     public Testy(Graph graph) {
         this.graph = graph;
     }
+
 
     @Override
     public Integer apply(Genotype<BitGene> chromosomes) {
@@ -20,12 +22,13 @@ public class Testy implements Function<Genotype<BitGene>, Integer> {
         MetGraph chromosomeGraph = new MetGraph(graph, chromosome);
         //List<MetVertex> chromosomeVertex = chromosomeGraph.GetListOfMetVertex();
         int amountOfUsedCost = chromosomeGraph.amountOfUsedCost();
-        boolean everyVertexHasBeenMet = chromosomeGraph.everyVertexHasBeenMet();
+        boolean everyEdgesHasBeenMet = chromosomeGraph.everyEdgesHasBeenMet();
         boolean foundBackWay = chromosomeGraph.foundBackWay();
-        if (everyVertexHasBeenMet && foundBackWay)
+        if (everyEdgesHasBeenMet && foundBackWay) {
             return amountOfUsedCost;
+        }
             //return graph.MaxCosts() - amountOfUsedCost;
         else
-            return graph.sumOfAll();
+            return (graph.sumOfAll() + amountOfUsedCost);
     }
 }

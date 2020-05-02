@@ -1,6 +1,7 @@
 package ISK_Listonosz;
 
 import java.io.IOException;
+
 import io.jenetics.*;
 import io.jenetics.engine.Engine;
 import io.jenetics.engine.EvolutionStatistics;
@@ -13,13 +14,22 @@ public class RouteInspection {
     private final static String PATH = "src/main/resources/graphs/";
     public static void main(String [] args) throws IOException {
         System.out.println("TEST");
-        //Graph graphTest = new Graph(PATH + "graphTEST");
+        //Graph graphTest = new Graph(PATH + "graphTEST2");
         Graph graphTest = new Graph(PATH + "graph1");
 
         Testy testy = new Testy(graphTest);
+
+        int bits = 0;
+        if (graphTest.HaveUnpairedVertex()) {
+            bits = ((graphTest.amountOfEdges() * 2 + (graphTest.amountOfEdges() * graphTest.amountOfUnpairedVertex())) + 1) * AMOUNT_OF_BITES_IN_BYTE;
+        }
+        else {
+            bits = (graphTest.amountOfEdges() * 2 + 1) * AMOUNT_OF_BITES_IN_BYTE;
+        }
+
         Engine<BitGene, Integer> engine =
-                Engine.builder(testy, BitChromosome.of(((graphTest.amountOfVertex() - 1) * AMOUNT_OF_BITES_IN_BYTE) * 2 ,0.5))
-                        .populationSize(100)
+                Engine.builder(testy, BitChromosome.of(bits,0.5))
+                        .populationSize(10000)
                         .optimize(Optimize.MINIMUM)
                         .survivorsSelector(new TournamentSelector<>(5))
                         .offspringSelector(new RouletteWheelSelector<>())

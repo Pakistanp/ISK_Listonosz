@@ -8,4 +8,5 @@ public interface AnyGraph {
 
     int sumOfAll();
     int amountOfVertex();
+    int amountOfEdges();
 }

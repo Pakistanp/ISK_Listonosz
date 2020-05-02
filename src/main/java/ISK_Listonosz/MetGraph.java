@@ -10,7 +10,11 @@ public class MetGraph {
     private final Graph graph;
     private List<Integer> graphData;
     private List<Integer> usedGraphData = new ArrayList<>();
-    private List<MetVertex> backVertices = new ArrayList<>();
+    private List<AnyEdge> metEdges = new ArrayList<>();
+    private int amountOfUsedDataToMakeAdditionalEgdes = 0;
+    private int addedEdges = 0;
+    private Graph additionalGraph;
+    StringBuilder sb = new StringBuilder();
 
     public MetGraph(List<MetVertex> metVertices, Graph graph){
         this.metVertices = metVertices;
@@ -19,35 +23,258 @@ public class MetGraph {
 
     public MetGraph(Graph graph, BitChromosome chromosome) {
         this.graph = graph;
+        amountOfUsedDataToMakeAdditionalEgdes = 0;
         metVertices = new ArrayList<>();
+        List<AnyVertex> metVertexList = new ArrayList<>();
+        List<AnyEdge> metEdgeList = new ArrayList<>();
+        for (AnyVertex vertex : graph.vertices()) {
+            metVertexList.add(new Vertex(vertex));
+        }
+        for (AnyEdge edge : graph.edges()) {
+            metEdgeList.add(new Edge(edge));
+        }
+        additionalGraph = new Graph(metEdgeList, metVertexList);
         graphData = getListOfGraphIntDataFrom(chromosome);
         IntStream.range(0, graphData.size()).forEach(element -> graphData.set(element, graphData.get(element) + 128));
         try {
-            chooseWays(graphData, graph.vertices());
-            int cost = 0;
-            for (int i = 0; i < (graph.amountOfVertex() - 1); i++) {
-                MetVertex newMetVertex;
-                AnyVertex vertex = graph.vertices().get(usedGraphData.get(i));
-                cost = vertex.connectedVertexCosts().get(graphData.get(i));
-                newMetVertex = new MetVertex(vertex, cost);
-
-                metVertices.add(newMetVertex);
+            sb.append("chooseStartVertex - ");
+            chooseStartVertex(graphData.get(0));
+            if (graph.amountOfUnpairedVertex() > 0) {
+                sb.append("makeAdditionalEdges - ");
+                //makeAdditionalEdges(graphData, metVertexList);
             }
-            findBackPath(graphData, graph.vertices());
+           // if(egdesAddedCorrectly())
+            sb.append("chooseWays - ");
+            chooseWays(graphData, additionalGraph.vertices());
 
-            for (int i = (graph.amountOfVertex() - 1); i < graphData.size(); i++) {
+            int cost = 0;
+            for (int i = 0; i < additionalGraph.amountOfEdges(); i++) {
                 if(usedGraphData.get(i) != -1) {
                     MetVertex newMetVertex;
-                    AnyVertex vertex = graph.vertices().get(usedGraphData.get(i));
-                    cost = vertex.connectedVertexCosts().get(graphData.get(i));
+                    sb.append("usedGraphData.get(i = " + i + ") - ");
+                    AnyVertex vertex = additionalGraph.vertices().get(usedGraphData.get(i));
+                    sb.append("cost - ");
+                    cost = vertex.connectedVertexCosts().get(graphData.get(i + 1 + amountOfUsedDataToMakeAdditionalEgdes));
+                    sb.append("All DONE - ");
                     newMetVertex = new MetVertex(vertex, cost);
 
                     metVertices.add(newMetVertex);
                 }
             }
+            //findBackPath(graphData, graph.vertices());
+
+//            for (int i = (graph.amountOfVertex() - 1); i < graphData.size(); i++) {
+//                if(usedGraphData.get(i) != -1) {
+//                    MetVertex newMetVertex;
+//                    AnyVertex vertex = graph.vertices().get(usedGraphData.get(i));
+//                    cost = vertex.connectedVertexCosts().get(graphData.get(i));
+//                    newMetVertex = new MetVertex(vertex, cost);
+//
+//                    metVertices.add(newMetVertex);
+//                }
+//            }
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(e + "\n" +sb.toString());
         }
+    }
+
+    private void makeAdditionalEdges2( List<Integer> graphData, List<AnyVertex> vertices) {
+        List<Integer> addedEgdesList = new ArrayList<>();
+
+        List<AnyVertex> unpairedList = new ArrayList<>();
+        for (AnyVertex vertex : vertices){
+            if (vertex.connectedVertexCosts().size() % 2 != 0) {
+                unpairedList.add(vertex);
+            }
+        }
+        for (int unpairVertex = 0 ; unpairVertex < unpairedList.size(); unpairVertex ++) {
+
+            if( addedEgdesList.contains(unpairedList.get(unpairVertex).current()) ) {
+                continue;
+            }
+
+            for (int i = 0 ; i < unpairedList.size(); i ++) {
+                for (int k = 0; k < addedEgdesList.size(); k++){
+                    if (unpairedList.get(i).current() == addedEgdesList.get(k)){
+                        unpairedList.remove(i);
+                    }
+                }
+            }
+
+            boolean added = false;
+            List<AnyVertex> metVertexList = new ArrayList<>();
+            for (AnyVertex vertex : vertices) {
+                metVertexList.add(new Vertex(vertex));
+            }
+            for (int j = 0; j < unpairedList.size(); j++) {
+                if (unpairVertex != j && unpairedList.get(unpairVertex).connectedVertexCosts().containsKey(unpairedList.get(j).current())
+                        && !addedEgdesList.contains(unpairedList.get(unpairVertex).current()) && !addedEgdesList.contains(unpairedList.get(j).current())) {
+                    AnyEdge edge = additionalGraph.getEdgeByVertex(unpairedList.get(unpairVertex).current(), unpairedList.get(j).current());
+                    additionalGraph.edges().add(new Edge(edge.firstVertex(), edge.secondVertex(), edge.cost(), edge.multipleUse() + 1));
+                    addedEgdesList.add(edge.firstVertex());
+                    addedEgdesList.add(edge.secondVertex());
+
+                    Map<Integer,Integer> connectedVertexCosts = additionalGraph.vertices().get(edge.firstVertex() - 1).connectedVertexCosts();
+                    connectedVertexCosts.put(edge.secondVertex(), edge.cost());
+                    connectedVertexCosts = additionalGraph.vertices().get(edge.secondVertex() - 1).connectedVertexCosts();
+                    connectedVertexCosts.put(edge.firstVertex(), edge.cost());
+                    added = true;
+                    break;
+                }
+
+            }
+
+            if(!added) {
+                int tempAmountOfUsedDataToMakeAdditionalEgdes = 0;
+
+                int startVertex = unpairedList.get(unpairVertex).current();
+                int prevVertex = startVertex;
+                int nextVertex = startVertex;
+                int allCount = 0;
+                added = false;
+                for (int k = 1; k <= graph.amountOfEdges(); k++) {
+                    int section = (int) Math.ceil((float) 256 / metVertexList.get(nextVertex - 1).connectedVertexCosts().size());
+                    int i = 1;
+                    for (Map.Entry<Integer, Integer> vertexEntry : metVertexList.get(nextVertex - 1).connectedVertexCosts().entrySet()) {
+                        if ((section * i + 1) >= graphData.get(k) && !added) {
+                            graphData.set(k, vertexEntry.getKey());
+                            tempAmountOfUsedDataToMakeAdditionalEgdes += 1;
+                            prevVertex = nextVertex;
+                            nextVertex = vertexEntry.getKey();
+                            allCount += vertexEntry.getValue();
+                            for (AnyVertex ver : unpairedList) {
+                                if (!ver.equals(unpairedList.get(unpairVertex))) {
+                                    if (ver.current() == nextVertex && !addedEgdesList.contains(nextVertex)) {
+                                        Map<Integer, Integer> connectedVertexCosts = additionalGraph.vertices().get(startVertex - 1).connectedVertexCosts();
+                                        additionalGraph.edges().add(new Edge(startVertex, nextVertex, allCount, 1));
+
+                                        amountOfUsedDataToMakeAdditionalEgdes += tempAmountOfUsedDataToMakeAdditionalEgdes;
+
+                                        addedEgdesList.add(startVertex);
+                                        addedEgdesList.add(nextVertex);
+
+                                        connectedVertexCosts.put(nextVertex, allCount);
+                                        connectedVertexCosts = additionalGraph.vertices().get(nextVertex - 1).connectedVertexCosts();
+                                        connectedVertexCosts.put(startVertex, allCount);
+
+                                        added = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            metVertexList.get(nextVertex - 1).connectedVertexCosts().remove(prevVertex);
+                            break;
+                        }
+                        i++;
+                    }
+                    if (added)
+                        break;
+                }
+            }
+
+        }
+
+    }
+    private void makeAdditionalEdges(List<Integer> graphData, List<AnyVertex> vertices) {
+        boolean isTargetFound = false;
+        int tempAmountOfUsedDataToMakeAdditionalEgdes = 0;
+        List<Integer> addedEgdesList = new ArrayList<>();
+
+        List<AnyVertex> unpairedList = new ArrayList<>();
+        for (AnyVertex vertex : vertices){
+            if (vertex.connectedVertexCosts().size() % 2 != 0) {
+                unpairedList.add(vertex);
+            }
+        }
+
+        for (int unpairVertex = 0 ; unpairVertex < unpairedList.size(); unpairVertex ++) {
+            if( addedEgdesList.contains(unpairedList.get(unpairVertex).current()) ) {
+                continue;
+            }
+            List<AnyVertex> metVertexList = new ArrayList<>();
+            for (AnyVertex vertex : vertices) {
+                metVertexList.add(new Vertex(vertex));
+            }
+            tempAmountOfUsedDataToMakeAdditionalEgdes = 0;
+
+            int startVertex = unpairedList.get(unpairVertex).current();
+            int prevVertex = startVertex;
+            int nextVertex = startVertex;
+            int allCount = 0;
+            boolean added = false;
+            for (int k = 1; k <= graph.amountOfEdges(); k++) {
+                int section = (int) Math.ceil((float) 256 / metVertexList.get(nextVertex - 1).connectedVertexCosts().size());
+                int i = 1;
+                for (Map.Entry<Integer, Integer> vertexEntry : metVertexList.get(nextVertex - 1).connectedVertexCosts().entrySet()) {
+                    if ((section * i + 1) >= graphData.get(k) && !added) {
+                        graphData.set(k, vertexEntry.getKey());
+                        tempAmountOfUsedDataToMakeAdditionalEgdes += 1;
+                        prevVertex = nextVertex;
+                        nextVertex = vertexEntry.getKey();
+                        allCount += vertexEntry.getValue();
+                        for (AnyVertex ver : unpairedList) {
+                            if (!ver.equals(unpairedList.get(unpairVertex))) {
+                                if (ver.current() == nextVertex && !addedEgdesList.contains(nextVertex)) {
+                                    Map<Integer,Integer> connectedVertexCosts = additionalGraph.vertices().get(startVertex - 1).connectedVertexCosts();
+                                    additionalGraph.edges().add(new Edge(startVertex, nextVertex, allCount, 1));
+
+                                    amountOfUsedDataToMakeAdditionalEgdes += tempAmountOfUsedDataToMakeAdditionalEgdes;
+
+                                    addedEgdesList.add(startVertex);
+                                    addedEgdesList.add(nextVertex);
+
+                                    connectedVertexCosts.put(nextVertex, allCount);
+                                    connectedVertexCosts = additionalGraph.vertices().get(nextVertex - 1).connectedVertexCosts();
+                                    connectedVertexCosts.put(startVertex, allCount);
+
+                                    added = true;
+                                    break;
+                                }
+                            }
+                        }
+                        metVertexList.get(nextVertex - 1).connectedVertexCosts().remove(prevVertex);
+                        break;
+                    }
+                    i++;
+                }
+                if (added)
+                    break;
+            }
+        }
+
+        /*int xd = 0;
+        if (addedEgdesList.size() != unpairedList.size()) {
+            sb.append(" (add one more) ");
+            boolean added = false;
+            List<AnyVertex> subList = new ArrayList<>();
+            for (xd = 0; xd < unpairedList.size(); xd ++){
+                if (addedEgdesList.contains(unpairedList.get(xd).current())) {
+                    continue;
+                } else {
+                    subList.add(unpairedList.get(xd));
+                }
+            }
+            sb.append(" (after create sublist) ");
+            for (int i = 0; i < subList.size(); i++) {
+                for (int j = 0; j < subList.size(); j++) {
+                    if (i != j && subList.get(i).connectedVertexCosts().containsKey(subList.get(j).current())) {
+                        AnyEdge edge = additionalGraph.getEdgeByVertex(subList.get(i).current(), subList.get(j).current());
+                        additionalGraph.edges().add(new Edge(edge.firstVertex(), edge.secondVertex(), edge.cost(), edge.multipleUse() + 1));
+                        addedEgdesList.add(edge.firstVertex());
+                        addedEgdesList.add(edge.secondVertex());
+
+                        Map<Integer,Integer> connectedVertexCosts = additionalGraph.vertices().get(edge.firstVertex() - 1).connectedVertexCosts();
+                        connectedVertexCosts.put(edge.secondVertex(), edge.cost());
+                        connectedVertexCosts = additionalGraph.vertices().get(edge.secondVertex() - 1).connectedVertexCosts();
+                        connectedVertexCosts.put(edge.firstVertex(), edge.cost());
+                        added = true;
+                        break;
+                    }
+                }
+                if (added)
+                    break;
+            }
+        }*/
     }
 
     private List<Integer> getListOfGraphIntDataFrom(BitChromosome chromosome) {
@@ -65,18 +292,23 @@ public class MetGraph {
 
     public int amountOfUsedCost() {
         int sum = 0;
-        for (MetVertex metVertex : metVertices)
-            sum += metVertex.GetChosenCost();
+        for (AnyEdge metEgde : metEdges)
+            sum += metEgde.cost();
         return sum;
     }
 
-    public boolean everyVertexHasBeenMet() {
-        List<Integer> tempVertexList = new ArrayList<>();
-        tempVertexList.add(1);
+    public boolean everyEdgesHasBeenMet() {
+        return containsAll(metEdges, graph.edges());
+    }
+
+    public boolean everyEdgesHasBeenMet2() {
+        List<Edge> tempEdgesList = new ArrayList<>();
         boolean res = true;
-        for (int i = 0; i < (graph.amountOfVertex() - 1); i++) {
-            if (!tempVertexList.contains(graphData.get(i)))
-                tempVertexList.add(graphData.get(i));
+        for (int i = 0; i < metEdges.size(); i++) {
+            if (!tempEdgesList.contains(metEdges.get(i)) && metEdges.get(i).multipleUse() > 0) {
+                ((Edge)metEdges.get(i)).setMultipleUse(metEdges.get(i).multipleUse() - 1);
+                tempEdgesList.add((Edge) metEdges.get(i));
+            }
             else {
                 res = false;
                 break;
@@ -86,19 +318,18 @@ public class MetGraph {
     }
 
     public boolean foundBackWay() {
-        List<Integer> tempVertexList = new ArrayList<>();
-        int target = graph.vertices().get(0).current();
-        //tempVertexList.add(metVertices.get((graph.amountOfVertex() - 1)).getNumberChosenVertexByCost(metVertices.get((graph.amountOfVertex() - 1)).GetChosenCost()));
-        boolean res = false;
-        for (int i = (graph.amountOfVertex() - 1); i < metVertices.size(); i++) {
-            if (target == graphData.get(i)) {
-                //tempVertexList.add(graphData.get(i));
-                res = true;
-            }
-        }
-        return res;
+        return metEdges.get(0).firstVertex() == metEdges.get(metEdges.size() - 1).secondVertex();
     }
 
+    private void chooseStartVertex (int startValue) {
+        int section = (int) Math.ceil((float)255 / graph.amountOfVertex());
+        for (int i = 1; i <= graph.amountOfVertex(); i++) {
+            if ((section * i + 1) >= startValue) {
+                graphData.set(0, i);
+                break;
+            }
+        }
+    }
     public boolean isCorrectWay() {
         int timesMet = 0;
         for (AnyVertex vertex : graph.vertices()) {
@@ -121,27 +352,70 @@ public class MetGraph {
 //        }
 //    }
     private void chooseWays(List<Integer> graphData, List<AnyVertex> vertices) {
-        int nextVertex = 1;
-        int prevVertex = 1;
+        int startVertex = graphData.get(0);
+        int prevVertex = startVertex;
+        int nextVertex = startVertex;
+        boolean isTargetFound = false;
         List<AnyVertex> metVertexList = new ArrayList<>();
         for (AnyVertex vertex : vertices) {
             metVertexList.add(new Vertex(vertex));
         }
-        for (int k = 0; k < (graph.amountOfVertex() - 1); k++) {
-            int section = (int) Math.ceil(256 / metVertexList.get(nextVertex - 1).connectedVertexCosts().size());
+        int k = 1 + amountOfUsedDataToMakeAdditionalEgdes;
+        while(!containsAll(metEdges, graph.edges())) {
+            int section = (int) Math.ceil((float)256 / metVertexList.get(nextVertex - 1).connectedVertexCosts().size());
             int i = 1;
             for (Map.Entry<Integer, Integer> vertexEntry : metVertexList.get(nextVertex - 1).connectedVertexCosts().entrySet()) {
-                if ((section * i + 1) >= graphData.get(k)) {
-                    usedGraphData.add(nextVertex - 1);
-                    graphData.set(k, vertexEntry.getKey());
+                /*if (isTargetFound) {
+                    usedGraphData.add(-1);
                     prevVertex = nextVertex;
                     nextVertex = vertexEntry.getKey();
-                    metVertexList.get(nextVertex - 1).connectedVertexCosts().remove(prevVertex);
+                    metEdges.add(new Edge(prevVertex, nextVertex,vertexEntry.getValue()));
                     break;
+                }*/
+                if((section * i + 1) >= graphData.get(k)) {
+                    //if (startVertex != vertexEntry.getKey()) {
+                        usedGraphData.add(nextVertex - 1);
+                        graphData.set(k, vertexEntry.getKey());
+                        prevVertex = nextVertex;
+                        nextVertex = vertexEntry.getKey();
+                        int multiple = additionalGraph.getEdgeByVertex(prevVertex, nextVertex).multipleUse();
+                        Edge edge = new Edge(prevVertex, nextVertex, vertexEntry.getValue(), multiple);
+
+                        metEdges.add(edge);
+
+                        //metVertexList.get(nextVertex - 1).connectedVertexCosts().remove(prevVertex);
+                        break;
+                    //}
+//                    else {
+//                        isTargetFound = true;
+//                        break;
+//                    }
                 }
                 i++;
             }
+            k++;
+            if (k >=((graph.amountOfEdges() * 2 + (graph.amountOfEdges() * graph.amountOfUnpairedVertex())) + 1)){
+                break;
+            }
         }
+    }
+
+    private boolean containsAll(List<AnyEdge> list1, List<AnyEdge> list2) {
+        Iterator<?> e = list2.iterator();
+        while (e.hasNext())
+            if (!contains(list1, (AnyEdge) e.next()))
+                return false;
+        return true;
+    }
+
+    private boolean contains(List<AnyEdge> list, AnyEdge o){
+        boolean res = false;
+        for(int i = 0; i < list.size(); i++) {
+            if (list.get(i).equals(o)){
+                res = true;
+            }
+        }
+        return res;
     }
 
     private void findBackPath(List<Integer> graphData, List<AnyVertex> vertices) {
@@ -181,13 +455,31 @@ public class MetGraph {
     }
     //private void removeMetFromAllVertex()
 
+    public boolean compareEdgeList(List<Edge> edgesList, Edge compareEdge) {
+        boolean res = false;
+        for (Edge edge : edgesList) {
+           if(edge.firstVertex() == compareEdge.firstVertex() && edge.secondVertex() == compareEdge.secondVertex()) {
+               res = true;
+               break;
+           }
+        }
+        return res;
+    }
+    public String stringEdges(){
+        StringBuilder sb = new StringBuilder();
+        for (AnyEdge edge: additionalGraph.edges()) {
+            sb.append(edge.toString() + "\n");
+        }
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         StringBuilder graphAsString = new StringBuilder();
-        metVertices.forEach(vertex -> {
-            graphAsString.append(vertex.current()).append("-").append("(").append(vertex.GetChosenCost()).append(")").append("-");
+        metEdges.forEach(egde -> {
+            graphAsString.append(egde.toString() + "\n");
         });
-        graphAsString.append(metVertices.get(metVertices.size()-1).getNumberChosenVertexByCost(metVertices.get(metVertices.size()-1).GetChosenCost()));
+        //graphAsString.append(metVertices.get(metVertices.size()-1).getNumberChosenVertexByCost(metVertices.get(metVertices.size()-1).GetChosenCost()));
         return graphAsString.toString();
     }
     public List<Integer> GetGraphData() {

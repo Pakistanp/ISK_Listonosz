@@ -18,5 +18,6 @@ public class Result {
         return finalPhenotype.toString() + "\n" +
                 "Best way:\n" + resultGraph +
                 "\nAmount of used cost is:\n" + resultGraph.amountOfUsedCost();
+                //"\nEdges:\n" + resultGraph.stringEdges();
     }
 }

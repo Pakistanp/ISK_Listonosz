@@ -28,6 +28,11 @@ public class Vertex implements AnyVertex {
     }
 
     @Override
+    public int degreeOfVertex() {
+        return connectedVertexCosts.size();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

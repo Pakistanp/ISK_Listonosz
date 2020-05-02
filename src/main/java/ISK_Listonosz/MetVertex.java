@@ -51,4 +51,9 @@ public class MetVertex implements AnyVertex {
         return number;
     }
 
+    @Override
+    public int degreeOfVertex() {
+        return vertex.connectedVertexCosts().size();
+    }
+
 }
