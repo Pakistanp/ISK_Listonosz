@@ -27,10 +27,6 @@ public class Vertex implements AnyVertex {
         return number;
     }
 
-    @Override
-    public int degreeOfVertex() {
-        return connectedVertexCosts.size();
-    }
 
     @Override
     public boolean equals(Object o) {

@@ -73,45 +73,12 @@ public class Graph implements AnyGraph{
 
     public void MaxCost() {
         int maxCost = 0;
-//        int tempMaxCost = 0;
-//        int worstWay = 0;
-//        List<Integer> metVertexList = new ArrayList<>();
-//        List<AnyVertex> copyVertexList = new ArrayList<>();
-//        for (int i = 0; i < vertices.size(); i++) {
-//            copyVertexList.add(new Vertex(vertices.get(i).current(),vertices.get(i).connectedVertexCosts()));
-//        }
-//        AnyVertex vertex = copyVertexList.get(0);
-//        //removeWorstWayFromAllVertices(copyVertexList, 1);
-//        metVertexList.add(1);
-//        for (int i = 0; i < copyVertexList.size(); i++) {
-//            for (Map.Entry<Integer, Integer> vertexCost : vertex.connectedVertexCosts().entrySet()) {
-//                if (metVertexList.contains(vertexCost.getKey()))
-//                    continue;
-//                if (tempMaxCost == 0) {
-//                    tempMaxCost = vertexCost.getValue();
-//                    worstWay = vertexCost.getKey();
-//                } else if (tempMaxCost < vertexCost.getValue()) {
-//                    tempMaxCost = vertexCost.getValue();
-//                    worstWay = vertexCost.getKey();
-//                }
-//            }
-//            maxCost += tempMaxCost;
-//            vertex = copyVertexList.get(worstWay);
-//            metVertexList.add(worstWay);
-//            tempMaxCost = 0;
-//            //removeWorstWayFromAllVertices(copyVertexList, worstWay);
-//        }
         for (AnyEdge edge : edges) {
             maxCost += edge.cost();
         }
         this.maxCost = maxCost;
     }
 
-    private void removeWorstWayFromAllVertices(List<AnyVertex> vertexList, int toRemove) {
-        for (AnyVertex vertex : vertexList) {
-            vertex.connectedVertexCosts().remove(toRemove);
-        }
-    }
 
     public boolean HaveUnpairedVertex() {
         boolean res = false;
