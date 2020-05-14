@@ -12,7 +12,9 @@ public class Result {
         resultGraph = new MetGraph(testedGraph , finalPhenotype.getGenotype().getChromosome().as(BitChromosome.class));
         this.finalPhenotype = finalPhenotype;
     }
-
+    public String getAmountOfUsedCost() {
+        return "" + resultGraph.amountOfUsedCost();
+    }
     @Override
     public String toString() {
         return finalPhenotype.toString() + "\n" +
